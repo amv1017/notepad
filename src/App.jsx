@@ -9,22 +9,30 @@ export default function App() {
   useEffect(() => {
     const data = localStorage.getItem(LOCAL_STORAGE_ITEM)
     if (data) {
-      setState(data.split(','))
+      setState(data.split(',').map(text => ({id: uid(), text})))
     }
   }, [])
+
+  const uid = () => crypto.randomUUID()
+
+  const filtered = (id) => state.filter(s => s.id !== id)
+
+  const updateState = (newState) => {
+    setState(newState)
+    localStorage.setItem(LOCAL_STORAGE_ITEM, newState.map(s => s.text).join(','))
+  }
 
   return (<div className="container">
     <textarea value={text} onChange={(e) => setText(e.target.value)} />
     <button className="btn-add" onClick={() => {
-      const updated = [...state, text]
-      setState(updated)
+      updateState([...state, {id: uid(), text}])
       setText('')
-      localStorage.setItem(LOCAL_STORAGE_ITEM, updated)
     }}>Add</button>
-    {state.filter(e => e !== '').map((e, key) => <div className="note" key={key}>{e}</div>)}
-    <button className="btn-clear" onClick={() => {
-      localStorage.setItem(LOCAL_STORAGE_ITEM, [])
-      location.reload()
-    }}>Clear</button>
+    {state.filter(s => s.text !== '').map(s => <div className="note" key={s.id}>
+      <div>{s.text}</div>
+      <p onClick={() => {
+        updateState(filtered(s.id))
+      }}>✕</p>
+    </div>)}
   </div>)
 }
